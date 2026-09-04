@@ -368,6 +368,8 @@ Este es un proyecto de **aprendizaje personal**, pero si encontrás errores, mej
 
 **Hecho con ❤️ con fines de aprendizaje y reforzamiento de React.**
 
+Desarrollado por [**@peterarayan**](https://pedroaraya.vercel.app/) — 
+
 ⭐ Si te resultó útil este proyecto, ¡dale una estrella! ⭐
 
 </div>
