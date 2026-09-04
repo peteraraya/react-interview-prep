@@ -1,17 +1,21 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { MAPA_CODIGO } from './rawSources';
+import { createHighlighterCore } from 'shiki/core';
+import { createJavaScriptRegexEngine } from 'shiki/engine/javascript';
+import jsxLang from 'shiki/langs/jsx.mjs';
+import darkPlusTheme from 'shiki/themes/dark-plus.mjs';
 
 /**
  * CODE VIEWER - Vista de código fuente (pestaña "Código")
  * 
  * Muestra el código fuente real de la lección actual (Example / Challenge / preguntas)
- * como contenido dentro de la página, usando imports ?raw de Vite (sin dependencias).
+ * con resaltado de sintaxis exacto de VSCode (Shiki + tema Dark+).
  * 
  * Características:
  * - Selector para alternar entre Example.jsx, Challenge.jsx y preguntas.jsx
  * - Botón para copiar el código al portapapeles
  * - Numeración de líneas y scroll
- * - Tema oscuro (Dracula) para máxima legibilidad
+ * - Colores del lenguaje reconocidos automáticamente (JSX/JS/CSS)
  */
 
 const NOMBRES_ARCHIVO = {
@@ -21,13 +25,15 @@ const NOMBRES_ARCHIVO = {
 };
 
 const COLORES = {
-  panelBg: '#1e1e2e',
-  headerBg: '#282a36',
-  texto: '#f8f8f2',
-  comentario: '#6272a4',
-  primary: '#bd93f9',
-  primaryDark: '#8be9fd',
-  borde: '#44475a'
+  panelBg: '#1e1e1e',
+  headerBg: '#252526',
+  texto: '#d4d4d4',
+  comentario: '#6a9955',
+  primary: '#0e639c',
+  primaryDark: '#007acc',
+  borde: '#3e3e42',
+  lineaNum: '#858585',
+  lineaNumBg: '#252526'
 };
 
 const btnBase = {
@@ -36,13 +42,36 @@ const btnBase = {
   fontWeight: 'bold',
   fontSize: '13px',
   padding: '8px 14px',
-  borderRadius: '6px',
+  borderRadius: '4px',
   transition: 'all 0.2s'
 };
+
+// ============================================================
+// SINGLETON DE SHIKI (se inicializa una sola vez al cargar)
+// Configuración fine-grained: solo JSX + tema Dark+ + engine JS
+// ============================================================
+let highlighterPromise = null;
+
+function getHighlighter() {
+  if (!highlighterPromise) {
+    highlighterPromise = createHighlighterCore({
+      themes: [darkPlusTheme],
+      langs: [jsxLang],
+      engine: createJavaScriptRegexEngine()
+    }).catch(err => {
+      console.error('[CodeViewer] Error inicializando Shiki:', err);
+      highlighterPromise = null;
+      throw err;
+    });
+  }
+  return highlighterPromise;
+}
 
 export default function CodeViewer({ moduloId, tipoContenido }) {
   const [archivoVisible, setArchivoVisible] = useState('ejemplo');
   const [copiado, setCopiado] = useState(false);
+  const [tokensPorLinea, setTokensPorLinea] = useState(null);
+  const [listo, setListo] = useState(false);
 
   // Si vengo de una pestaña (ejemplo/desafio/preguntas), mostrar ese archivo
   useEffect(() => {
@@ -51,7 +80,7 @@ export default function CodeViewer({ moduloId, tipoContenido }) {
     }
   }, [tipoContenido]);
 
-  // Fuente del código actual
+  // Código crudo de la lección actual
   const codigoActual = useMemo(() => {
     const nombreArchivo = NOMBRES_ARCHIVO[archivoVisible] || 'Example';
     return MAPA_CODIGO[`${moduloId}/${nombreArchivo}`] || '';
@@ -62,6 +91,38 @@ export default function CodeViewer({ moduloId, tipoContenido }) {
     return codigoActual.split('\n').length;
   }, [codigoActual]);
 
+  // Resaltado de sintaxis con Shiki (colores de VSCode Dark+)
+  useEffect(() => {
+    let cancelado = false;
+    setTokensPorLinea(null);
+
+    if (!codigoActual) {
+      setListo(true);
+      return undefined;
+    }
+
+    getHighlighter()
+      .then(highlighter => {
+        if (cancelado) return;
+        const tokens = highlighter.codeToTokensBase(codigoActual, {
+          lang: 'jsx',
+          theme: 'dark-plus'
+        });
+        if (!cancelado) {
+          setTokensPorLinea(tokens);
+          setListo(true);
+        }
+      })
+      .catch(err => {
+        console.error('[CodeViewer] Error resaltando código:', err);
+        if (!cancelado) setListo(true);
+      });
+
+    return () => {
+      cancelado = true;
+    };
+  }, [codigoActual]);
+
   const copiarCodigo = async () => {
     try {
       await navigator.clipboard.writeText(codigoActual);
@@ -70,6 +131,69 @@ export default function CodeViewer({ moduloId, tipoContenido }) {
     } catch (err) {
       console.error('Error al copiar:', err);
     }
+  };
+
+  // Render del código resaltado
+  const renderCodigoResaltado = () => {
+    if (!listo) {
+      return (
+        <div style={{ padding: '30px', textAlign: 'center', color: COLORES.comentario }}>
+          Resaltando código…
+        </div>
+      );
+    }
+
+    if (!tokensPorLinea || tokensPorLinea.length === 0) {
+      return (
+        <div style={{ padding: '30px', textAlign: 'center', color: COLORES.comentario }}>
+          No hay código disponible para este archivo.
+        </div>
+      );
+    }
+
+    return tokensPorLinea.map((linea, i) => (
+      <div key={i} style={{ display: 'flex', minHeight: '21px' }}>
+        {/* Número de línea */}
+        <span
+          style={{
+            display: 'inline-block',
+            width: '48px',
+            minWidth: '48px',
+            flexShrink: 0,
+            textAlign: 'right',
+            paddingRight: '16px',
+            color: COLORES.lineaNum,
+            userSelect: 'none',
+            backgroundColor: COLORES.lineaNumBg,
+            lineHeight: '1.6'
+          }}
+        >
+          {i + 1}
+        </span>
+        {/* Conteúdo con color de token */}
+        <span style={{ flex: 1, paddingLeft: '16px', whiteSpace: 'pre', lineHeight: '1.6' }}>
+          {linea.length === 0
+            ? ' '
+            : linea.map((token, j) => (
+                <span
+                  key={j}
+                  style={{
+                    color: token.color || COLORES.texto,
+                    ...(token.fontStyle === 1
+                      ? { fontStyle: 'italic' }
+                      : token.fontStyle === 2
+                        ? { fontWeight: 'bold' }
+                        : token.fontStyle === 3
+                          ? { fontStyle: 'italic', fontWeight: 'bold' }
+                          : {})
+                  }}
+                >
+                  {token.content}
+                </span>
+              ))}
+        </span>
+      </div>
+    ));
   };
 
   const archivosDisponibles = ['ejemplo', 'desafio', 'preguntas'];
@@ -86,7 +210,8 @@ export default function CodeViewer({ moduloId, tipoContenido }) {
         color: COLORES.texto,
         borderRadius: '8px',
         overflow: 'hidden',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        border: `1px solid ${COLORES.borde}`
       }}
     >
       {/* ===== Header ===== */}
@@ -101,7 +226,7 @@ export default function CodeViewer({ moduloId, tipoContenido }) {
           flexWrap: 'wrap'
         }}
       >
-        <span style={{ fontSize: '18px', color: COLORES.primaryDark }}>💻</span>
+        <span style={{ fontSize: '18px' }}>💻</span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
             Código fuente de la lección
@@ -114,8 +239,8 @@ export default function CodeViewer({ moduloId, tipoContenido }) {
           onClick={copiarCodigo}
           style={{
             ...btnBase,
-            backgroundColor: copiado ? '#50fa7b' : COLORES.primary,
-            color: copiado ? '#1e1e2e' : 'white'
+            backgroundColor: copiado ? '#4ec9b0' : COLORES.primary,
+            color: 'white'
           }}
         >
           {copiado ? '✅ Copiado' : '📋 Copiar código'}
@@ -139,7 +264,7 @@ export default function CodeViewer({ moduloId, tipoContenido }) {
             style={{
               ...btnBase,
               backgroundColor: archivoVisible === f ? COLORES.primaryDark : 'transparent',
-              color: archivoVisible === f ? '#1e1e2e' : COLORES.comentario,
+              color: archivoVisible === f ? '#ffffff' : COLORES.comentario,
               border: `1px solid ${archivoVisible === f ? COLORES.primaryDark : COLORES.borde}`,
               fontSize: '12px',
               padding: '6px 12px'
@@ -151,53 +276,19 @@ export default function CodeViewer({ moduloId, tipoContenido }) {
       </div>
 
       {/* ===== Contenido del código ===== */}
-      <div style={{ maxHeight: '600px', overflow: 'auto', padding: '12px 0', paddingRight: '10px' }}>
+      <div style={{ maxHeight: '650px', overflow: 'auto', padding: '8px 0' }}>
         <pre
           style={{
             margin: 0,
             padding: 0,
             backgroundColor: 'transparent',
-            fontSize: '12.5px',
-            lineHeight: '1.6',
-            fontFamily: "'JetBrains Mono', Consolas, 'Courier New', monospace"
+            fontSize: '13px',
+            fontFamily: "'Consolas', 'Monaco', 'Courier New', monospace",
+            lineHeight: '1.6'
           }}
         >
-          {codigoActual.split('\n').map((linea, i) => (
-            <div
-              key={i}
-              style={{
-                display: 'flex',
-                minHeight: '20px',
-                whiteSpace: 'pre'
-              }}
-            >
-              <span
-                style={{
-                  display: 'inline-block',
-                  width: '44px',
-                  minWidth: '44px',
-                  flexShrink: 0,
-                  textAlign: 'right',
-                  paddingRight: '12px',
-                  color: COLORES.comentario,
-                  userSelect: 'none',
-                  backgroundColor: '#242434'
-                }}
-              >
-                {i + 1}
-              </span>
-              <span style={{ color: COLORES.texto, flex: 1, paddingLeft: '12px' }}>
-                {linea || ' '}
-              </span>
-            </div>
-          ))}
+          {renderCodigoResaltado()}
         </pre>
-
-        {!codigoActual && (
-          <div style={{ padding: '30px', textAlign: 'center', color: COLORES.comentario }}>
-            No hay código disponible para este archivo.
-          </div>
-        )}
       </div>
 
       {/* ===== Footer ===== */}
@@ -214,7 +305,7 @@ export default function CodeViewer({ moduloId, tipoContenido }) {
         }}
       >
         <span>{totalLineas} líneas</span>
-        <span>Fuente local · Vite ?raw</span>
+        <span>Resaltado con Shiki · tema Dark+ (VSCode)</span>
       </div>
     </div>
   );

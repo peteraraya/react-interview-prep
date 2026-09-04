@@ -96,8 +96,8 @@ Cada lección tiene una **4ª pestaña "💻 Código"** (junto a *Ejemplo*, *Des
 - 🔀 Cambia entre `Example.jsx`, `Challenge.jsx` y `preguntas.jsx` con los botones del visor.
 - 📋 Botón *Copiar* para copiar el código al portapapeles.
 - 🔢 Numeración de líneas y scroll para leer el archivo completo.
-- 🌙 Tema oscuro (Dracula) para máxima legibilidad.
-- ✅ Se implementa con imports `?raw` de Vite (**sin dependencias externas**).
+- 🎨 Resaltado de sintaxis **exacto de VSCode** (Shiki + tema *Dark+*), detectando el lenguaje JSX automáticamente.
+- ✅ Fuente con imports `?raw` de Vite (**sin servidor externo**).
 
 ---
 
