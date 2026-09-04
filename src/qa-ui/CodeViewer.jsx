@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
+import { MAPA_CODIGO } from './rawSources';
 
 /**
  * CODE VIEWER - Panel de visualización de código fuente
  * 
  * Muestra el código fuente real de la lección actual (Example / Challenge / preguntas)
- * en un panel lateral, usando import.meta.glob + ?raw de Vite (sin dependencias).
+ * en un panel lateral, usando imports ?raw de Vite (sin dependencias).
  * 
  * Características:
  * - Botón flotante para abrir/cerrar el panel
@@ -13,37 +14,11 @@ import React, { useState, useMemo } from 'react';
  * - Cambia automáticamente según el módulo/pestaña activa
  */
 
-// ============================================================
-// IMPORTAR TODOS LOS ARCHIVOS .jsx COMO TEXTO BRUTO (?raw)
-// ============================================================
-// Vite devuelve el contenido del archivo como string.
-// Las claves quedan así: ../01-jsx/Example.jsx?raw
-const rawFiles = import.meta.glob('../*/{Example,Challenge,preguntas}.jsx?raw', {
-  eager: true,
-  import: 'default'
-});
-
-// Normalizar las claves: ../01-jsx/Example.jsx?raw → { modulo: '01-jsx', archivo: 'Example' }
 const NOMBRES_ARCHIVO = {
   ejemplo: 'Example',
   desafio: 'Challenge',
   preguntas: 'preguntas'
 };
-
-function normalizarClave(clave) {
-  const match = clave.match(/\.\.\/(\d+-(?:[a-z-]+))\/(\w+)\.jsx\?raw$/);
-  if (!match) return null;
-  return { modulo: match[1], archivo: match[2] };
-}
-
-// Construir mapa hash → contenido crudo
-const MAPA_CODIGO = {};
-Object.entries(rawFiles).forEach(([clave, contenido]) => {
-  const info = normalizarClave(clave);
-  if (info) {
-    MAPA_CODIGO[`${info.modulo}/${info.archivo}`] = contenido;
-  }
-});
 
 const COLORES = {
   panelBg: '#1e1e2e',
