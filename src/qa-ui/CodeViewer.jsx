@@ -1,17 +1,17 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { MAPA_CODIGO } from './rawSources';
 
 /**
- * CODE VIEWER - Panel de visualización de código fuente
+ * CODE VIEWER - Vista de código fuente (pestaña "Código")
  * 
  * Muestra el código fuente real de la lección actual (Example / Challenge / preguntas)
- * en un panel lateral, usando imports ?raw de Vite (sin dependencias).
+ * como contenido dentro de la página, usando imports ?raw de Vite (sin dependencias).
  * 
  * Características:
- * - Botón flotante para abrir/cerrar el panel
- * - Copia el código al portapapeles
- * - Conteo de líneas y scroll
- * - Cambia automáticamente según el módulo/pestaña activa
+ * - Selector para alternar entre Example.jsx, Challenge.jsx y preguntas.jsx
+ * - Botón para copiar el código al portapapeles
+ * - Numeración de líneas y scroll
+ * - Tema oscuro (Dracula) para máxima legibilidad
  */
 
 const NOMBRES_ARCHIVO = {
@@ -41,23 +41,27 @@ const btnBase = {
 };
 
 export default function CodeViewer({ moduloId, tipoContenido }) {
-  const [abierto, setAbierto] = useState(false);
+  const [archivoVisible, setArchivoVisible] = useState('ejemplo');
   const [copiado, setCopiado] = useState(false);
-  const [archivoVisible, setArchivoVisible] = useState(tipoContenido);
 
-  // Fuente del código actual (basada en la pestaña activa)
+  // Si vengo de una pestaña (ejemplo/desafio/preguntas), mostrar ese archivo
+  useEffect(() => {
+    if (['ejemplo', 'desafio', 'preguntas'].includes(tipoContenido)) {
+      setArchivoVisible(tipoContenido);
+    }
+  }, [tipoContenido]);
+
+  // Fuente del código actual
   const codigoActual = useMemo(() => {
     const nombreArchivo = NOMBRES_ARCHIVO[archivoVisible] || 'Example';
     return MAPA_CODIGO[`${moduloId}/${nombreArchivo}`] || '';
   }, [moduloId, archivoVisible]);
 
-  // Número de líneas
   const totalLineas = useMemo(() => {
     if (!codigoActual) return 0;
     return codigoActual.split('\n').length;
   }, [codigoActual]);
 
-  // Copiar al portapapeles
   const copiarCodigo = async () => {
     try {
       await navigator.clipboard.writeText(codigoActual);
@@ -75,46 +79,17 @@ export default function CodeViewer({ moduloId, tipoContenido }) {
     preguntas: 'Preguntas'
   };
 
-  if (!abierto) {
-    return (
-      <button
-        onClick={() => setAbierto(true)}
-        style={{
-          position: 'fixed',
-          bottom: '20px',
-          right: '20px',
-          zIndex: 9999,
-          ...btnBase,
-          backgroundColor: COLORES.primary,
-          color: 'white',
-          boxShadow: '0 4px 14px rgba(189,147,249,0.4)',
-          padding: '12px 20px',
-          fontSize: '14px'
-        }}
-      >
-        💻 Ver código
-      </button>
-    );
-  }
-
   return (
     <div
       style={{
-        position: 'fixed',
-        top: 0,
-        right: 0,
-        bottom: 0,
-        width: 'min(560px, 100vw)',
-        zIndex: 9999,
         backgroundColor: COLORES.panelBg,
         color: COLORES.texto,
-        boxShadow: '-4px 0 20px rgba(0,0,0,0.4)',
-        display: 'flex',
-        flexDirection: 'column',
+        borderRadius: '8px',
+        overflow: 'hidden',
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
       }}
     >
-      {/* ===== Header del panel ===== */}
+      {/* ===== Header ===== */}
       <div
         style={{
           backgroundColor: COLORES.headerBg,
@@ -122,20 +97,19 @@ export default function CodeViewer({ moduloId, tipoContenido }) {
           display: 'flex',
           alignItems: 'center',
           gap: '10px',
-          borderBottom: `2px solid ${COLORES.borde}`
+          borderBottom: `1px solid ${COLORES.borde}`,
+          flexWrap: 'wrap'
         }}
       >
         <span style={{ fontSize: '18px', color: COLORES.primaryDark }}>💻</span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
-            Código fuente
+            Código fuente de la lección
           </div>
           <div style={{ fontSize: '12px', color: COLORES.comentario, fontFamily: 'monospace', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             src/{moduloId}/{etiquetas[archivoVisible]}.jsx
           </div>
         </div>
-
-        {/* Botón copiar */}
         <button
           onClick={copiarCodigo}
           style={{
@@ -144,16 +118,7 @@ export default function CodeViewer({ moduloId, tipoContenido }) {
             color: copiado ? '#1e1e2e' : 'white'
           }}
         >
-          {copiado ? '✅ Copiado' : '📋 Copiar'}
-        </button>
-
-        {/* Botón cerrar */}
-        <button
-          onClick={() => setAbierto(false)}
-          style={{ ...btnBase, backgroundColor: '#ff5555', color: 'white', padding: '8px 10px' }}
-          aria-label="Cerrar"
-        >
-          ✕
+          {copiado ? '✅ Copiado' : '📋 Copiar código'}
         </button>
       </div>
 
@@ -186,66 +151,48 @@ export default function CodeViewer({ moduloId, tipoContenido }) {
       </div>
 
       {/* ===== Contenido del código ===== */}
-      <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
-        <div
+      <div style={{ maxHeight: '600px', overflow: 'auto', padding: '12px 0', paddingRight: '10px' }}>
+        <pre
           style={{
-            height: '100%',
-            overflow: 'auto',
-            padding: '12px 0',
-            paddingRight: '10px'
+            margin: 0,
+            fontSize: '12.5px',
+            lineHeight: '1.6',
+            fontFamily: "'JetBrains Mono', Consolas, 'Courier New', monospace"
           }}
         >
-          <pre
-            style={{
-              margin: 0,
-              fontSize: '12.5px',
-              lineHeight: '1.6',
-              fontFamily: "'JetBrains Mono', Consolas, 'Courier New', monospace"
-            }}
-          >
-            {codigoActual.split('\n').map((linea, i) => (
-              <div
-                key={i}
+          {codigoActual.split('\n').map((linea, i) => (
+            <div
+              key={i}
+              style={{
+                display: 'flex',
+                minHeight: '20px',
+                whiteSpace: 'pre'
+              }}
+            >
+              <span
                 style={{
-                  display: 'flex',
-                  minHeight: '20px',
-                  whiteSpace: 'pre'
+                  display: 'inline-block',
+                  width: '44px',
+                  minWidth: '44px',
+                  flexShrink: 0,
+                  textAlign: 'right',
+                  paddingRight: '12px',
+                  color: COLORES.comentario,
+                  userSelect: 'none',
+                  backgroundColor: '#242434'
                 }}
               >
-                <span
-                  style={{
-                    display: 'inline-block',
-                    width: '44px',
-                    minWidth: '44px',
-                    flexShrink: 0,
-                    textAlign: 'right',
-                    paddingRight: '12px',
-                    color: COLORES.comentario,
-                    userSelect: 'none'
-                  }}
-                >
-                  {i + 1}
-                </span>
-                <span style={{ color: COLORES.texto, flex: 1 }}>
-                  {linea || ' '}
-                </span>
-              </div>
-            ))}
-          </pre>
-        </div>
+                {i + 1}
+              </span>
+              <span style={{ color: COLORES.texto, flex: 1, paddingLeft: '12px' }}>
+                {linea || ' '}
+              </span>
+            </div>
+          ))}
+        </pre>
 
-        {/* Overlay si no hay código */}
         {!codigoActual && (
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: COLORES.comentario
-            }}
-          >
+          <div style={{ padding: '30px', textAlign: 'center', color: COLORES.comentario }}>
             No hay código disponible para este archivo.
           </div>
         )}
@@ -260,7 +207,8 @@ export default function CodeViewer({ moduloId, tipoContenido }) {
           color: COLORES.comentario,
           borderTop: `1px solid ${COLORES.borde}`,
           display: 'flex',
-          justifyContent: 'space-between'
+          justifyContent: 'space-between',
+          flexWrap: 'wrap'
         }}
       >
         <span>{totalLineas} líneas</span>

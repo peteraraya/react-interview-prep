@@ -91,12 +91,13 @@ npm run dev
 
 ### 💻 Visor de código fuente
 
-Cada lección tiene un botón flotante **"💻 Ver código"** (abajo a la derecha) que abre un panel lateral con el código fuente real de la lección activa.
+Cada lección tiene una **4ª pestaña "💻 Código"** (junto a *Ejemplo*, *Desafío* y *Preguntas*) que muestra el código fuente real de la lección activa, integrado en la misma página.
 
-- 🔀 Cambia entre `Example.jsx`, `Challenge.jsx` y `preguntas.jsx` con las pestañas del panel.
+- 🔀 Cambia entre `Example.jsx`, `Challenge.jsx` y `preguntas.jsx` con los botones del visor.
 - 📋 Botón *Copiar* para copiar el código al portapapeles.
 - 🔢 Numeración de líneas y scroll para leer el archivo completo.
-- ✅ Se implementa con `import.meta.glob + ?raw` de Vite (**sin dependencias externas**).
+- 🌙 Tema oscuro (Dracula) para máxima legibilidad.
+- ✅ Se implementa con imports `?raw` de Vite (**sin dependencias externas**).
 
 ---
 

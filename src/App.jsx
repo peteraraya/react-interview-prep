@@ -291,6 +291,17 @@ function ContenidoModulo({ moduloId, tipoContenido }) {
   };
   
   const Componente = componentes[moduloId][tipoContenido];
+
+  // La pestaña "Código" muestra el código fuente de la lección
+  if (tipoContenido === 'codigo') {
+    return (
+      <CodeViewer
+        moduloId={moduloId}
+        tipoContenido={tipoContenido}
+      />
+    );
+  }
+
   return <Componente />;
 }
 
@@ -410,6 +421,17 @@ export default function App() {
         >
           Preguntas de Entrevista
         </button>
+        <button
+          onClick={() => setTipoContenido('codigo')}
+          style={{
+            ...estilosGlobales.tab,
+            ...(tipoContenido === 'codigo' 
+              ? { ...estilosGlobales.tabActive, backgroundColor: '#1e1e2e' }
+              : estilosGlobales.tabInactive)
+          }}
+        >
+          💻 Código
+        </button>
       </div>
       
       {/* Contenido */}
@@ -436,12 +458,6 @@ export default function App() {
           16 módulos con ejemplos documentados y desafíos prácticos de entrevistas técnicas
         </p>
       </footer>
-
-      {/* Visor de código fuente de la lección actual */}
-      <CodeViewer
-        moduloId={moduloActual}
-        tipoContenido={tipoContenido}
-      />
     </div>
   );
 }
