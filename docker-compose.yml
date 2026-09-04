@@ -1,0 +1,33 @@
+# =============================================================
+#  docker-compose.yml
+#  Orquesta los entornos de desarrollo y producción de la app
+#
+#  📦 PRODUCCIÓN:   docker compose up -d --build
+#  🚀 DESARROLLO:  docker compose -f docker-compose.dev.yml up
+# =============================================================
+
+services:
+  # ---------- Producción (nginx sirviendo el build) ----------
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: react-interview-prep
+    image: react-interview-prep:latest
+    ports:
+      - "8080:80"          # host:container
+    restart: unless-stopped
+    # Evita que el contenedor se bloquee por falta de healthcheck
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+# Volúmenes y redes compartidas (se pueden añadir cuando se necesiten)
+# volumes:
+#   app-data:
+# networks:
+#   app-network:
+#     driver: bridge

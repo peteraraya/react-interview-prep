@@ -1,0 +1,39 @@
+# node_modules / dependency cache
+node_modules
+npm-debug.log
+npmrc
+
+# build output
+dist
+dist-ssr
+coverage
+*.local
+
+# environment
+.env
+.env.*
+!.env.example
+
+# git / editor
+.git
+.gitignore
+.github
+.gitlab
+.vscode
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# docker files (no copy into build context)
+Dockerfile
+.dockerignore
+docker-compose*.yml
+docker-compose*.yaml
+nginx.conf
+
+# docs
+README.md
