@@ -1,0 +1,162 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 0;
+  color: #333;
+}
+
+a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  font-family: inherit;
+}
+
+code {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  background-color: #f4f4f4;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+pre {
+  background-color: #f4f4f4;
+  padding: 15px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Estilos para ejemplos y desafíos */
+.modulo, .desafio {
+  text-align: left;
+}
+
+.modulo h1, .desafio h2 {
+  font-size: 28px;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.descripcion {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 30px;
+  line-height: 1.6;
+}
+
+.ejemplos {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.ejemplo, .desafio > div {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #e0e0e0;
+}
+
+.explicacion {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 30px;
+  border-left: 4px solid #007bff;
+}
+
+.explicacion h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #007bff;
+}
+
+.explicacion ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.explicacion li {
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.explicacion li strong {
+  color: #333;
+}
+
+/* Animaciones */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .ejemplos {
+    gap: 20px;
+  }
+  
+  .ejemplo, .desafio > div {
+    padding: 15px;
+  }
+  
+  .modulo h1, .desafio h2 {
+    font-size: 24px;
+  }
+}
