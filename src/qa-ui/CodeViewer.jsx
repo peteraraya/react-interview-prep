@@ -155,6 +155,8 @@ export default function CodeViewer({ moduloId, tipoContenido }) {
         <pre
           style={{
             margin: 0,
+            padding: 0,
+            backgroundColor: 'transparent',
             fontSize: '12.5px',
             lineHeight: '1.6',
             fontFamily: "'JetBrains Mono', Consolas, 'Courier New', monospace"
