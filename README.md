@@ -67,7 +67,7 @@ npm run dev
  ┃ ┣ 📂 14-performance/   🔹 Optimización de rendimiento
  ┃ ┣ 📂 15-custom-hooks/  🔹 Custom Hooks avanzados
  ┃ ┣ 📂 16-patterns/      🔹 Patrones avanzados
- ┃ ┣ 📂 qa-ui/            🔹 Componente de preguntas/respuestas
+ ┃ ┣ 📂 qa-ui/            🔹 Componentes reutilizables (preguntas + visor de código)
  ┃ ┣ 📄 App.jsx           🔹 Componente principal
  ┃ ┗ 📄 main.jsx          🔹 Punto de entrada
  ┣ 📄 package.json
@@ -88,6 +88,15 @@ npm run dev
 | `preguntas.jsx` 🗣️ | Preguntas frecuentes con las **respuestas recomendadas** |
 
 > 🗂️ La aplicación tiene **3 pestañas** por módulo: *Ejemplo Educativo*, *Desafío de Entrevista* y *Preguntas de Entrevista*.
+
+### 💻 Visor de código fuente
+
+Cada lección tiene un botón flotante **"💻 Ver código"** (abajo a la derecha) que abre un panel lateral con el código fuente real de la lección activa.
+
+- 🔀 Cambia entre `Example.jsx`, `Challenge.jsx` y `preguntas.jsx` con las pestañas del panel.
+- 📋 Botón *Copiar* para copiar el código al portapapeles.
+- 🔢 Numeración de líneas y scroll para leer el archivo completo.
+- ✅ Se implementa con `import.meta.glob + ?raw` de Vite (**sin dependencias externas**).
 
 ---
 

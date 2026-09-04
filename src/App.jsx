@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import CodeViewer from './qa-ui/CodeViewer';
 import JSXExamples from './01-jsx/Example';
 import JSXChallenge from './01-jsx/Challenge';
 import PropsExamples from './02-props/Example';
@@ -435,6 +436,12 @@ export default function App() {
           16 módulos con ejemplos documentados y desafíos prácticos de entrevistas técnicas
         </p>
       </footer>
+
+      {/* Visor de código fuente de la lección actual */}
+      <CodeViewer
+        moduloId={moduloActual}
+        tipoContenido={tipoContenido}
+      />
     </div>
   );
 }
