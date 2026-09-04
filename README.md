@@ -67,11 +67,15 @@ npm run dev
  ┃ ┣ 📂 14-performance/   🔹 Optimización de rendimiento
  ┃ ┣ 📂 15-custom-hooks/  🔹 Custom Hooks avanzados
  ┃ ┣ 📂 16-patterns/      🔹 Patrones avanzados
- ┃ ┣ 📂 qa-ui/            🔹 Componente de preguntas/respuestas
+ ┃ ┣ 📂 qa-ui/            🔹 Componentes reutilizables (preguntas + visor de código)
  ┃ ┣ 📄 App.jsx           🔹 Componente principal
  ┃ ┗ 📄 main.jsx          🔹 Punto de entrada
  ┣ 📄 package.json
  ┣ 📄 vite.config.js
+ ┣ 🐳 Dockerfile          🔹 Build de producción multi-stage
+ ┣ 🐳 nginx.conf          🔹 Configuración de nginx (SPA)
+ ┣ 🐳 docker-compose.yml  🔹 Entorno de producción
+ ┣ 🐳 docker-compose.dev.yml 🔹 Entorno de desarrollo
  ┗ 📄 README.md
 ```
 
@@ -84,6 +88,16 @@ npm run dev
 | `preguntas.jsx` 🗣️ | Preguntas frecuentes con las **respuestas recomendadas** |
 
 > 🗂️ La aplicación tiene **3 pestañas** por módulo: *Ejemplo Educativo*, *Desafío de Entrevista* y *Preguntas de Entrevista*.
+
+### 💻 Visor de código fuente
+
+Cada lección tiene una **4ª pestaña "💻 Código"** (junto a *Ejemplo*, *Desafío* y *Preguntas*) que muestra el código fuente real de la lección activa, integrado en la misma página.
+
+- 🔀 Cambia entre `Example.jsx`, `Challenge.jsx` y `preguntas.jsx` con los botones del visor.
+- 📋 Botón *Copiar* para copiar el código al portapapeles.
+- 🔢 Numeración de líneas y scroll para leer el archivo completo.
+- 🎨 Resaltado de sintaxis **exacto de VSCode** (Shiki + tema *Dark+*), detectando el lenguaje JSX automáticamente.
+- ✅ Fuente con imports `?raw` de Vite (**sin servidor externo**).
 
 ---
 
@@ -157,6 +171,171 @@ npm run preview      # 👀 Previsualizar el build
 
 ---
 
+## 🐳 Dockerización (Configuración Profesional)
+
+El proyecto está dockerizado de forma **profesional** con un enfoque de **multi-stage build** para producción y un entorno dedicado para desarrollo con *hot-reload*.
+
+### 📦 Archivos incluidos
+
+| Archivo | Propósito |
+|---------|-----------|
+| `Dockerfile` | Build multi-stage: compila con Node → sirve con nginx |
+| `nginx.conf` | Configuración de nginx (SPA fallback, gzip, caché, seguridad) |
+| `docker-compose.yml` | Entorno de **producción** (nginx) |
+| `docker-compose.dev.yml` | Entorno de **desarrollo** (hot-reload de Vite) |
+| `.dockerignore` | Excluye archivos innecesarios del contexto de build |
+
+### 🏗️ Cómo funciona el `Dockerfile`
+
+El `Dockerfile` usa **2 etapas** para producir una imagen mínima y segura:
+
+```
+🧱 ETAPA 1 (build)                 🚀 ETAPA 2 (runtime)
+┌──────────────────────┐           ┌─────────────────────────┐
+│ node:20-alpine       │           │ nginx:1.27-alpine       │
+│  ├─ npm ci           │  ──►      │  ├─ nginx.conf          │
+│  ├─ npm run build    │  copia    │  ├─ /dist → html        │
+│  └─ genera /dist     │  dist     │  └─ sirve en :80        │
+└──────────────────────┘           └─────────────────────────┘
+```
+
+**Beneficios:**
+- 🪶 Imagen final más liviana (solo nginx + HTML/JS/CSS, **sin Node**).
+- 🔒 Menor superficie de ataque (menos paquetes instalados).
+- ⚡ Aprovecha la caché de capas (solo reinstala si cambia `package.json`).
+- ✅ Incluye `HEALTHCHECK` para monitoreo del contenedor.
+
+### 🚀 Ejecutar en PRODUCCIÓN
+
+```bash
+# 1. Construir y levantar el contenedor
+docker compose up -d --build
+
+# 2. Verificar que esté corriendo
+docker compose ps
+
+# 3. Abrir en el navegador
+# → http://localhost:8080
+
+# 4. Ver los logs en tiempo real
+docker compose logs -f
+```
+
+### 🧑‍💻 Ejecutar en DESARROLLO (con hot-reload)
+
+```bash
+# Levantar el entorno de desarrollo
+docker compose -f docker-compose.dev.yml up
+
+# → http://localhost:5173 (refresca solo con cada cambio)
+```
+
+> 💡 En Windows/Docker: el entorno de desarrollo usa `CHOKIDAR_USEPOLLING=true` para que el hot-reload funcione correctamente con los montajes de volúmenes.
+
+### 🧹 Gestionar los contenedores
+
+```bash
+# Detener sin eliminar
+docker compose down
+
+# Detener y eliminar todo (con volúmenes)
+docker compose down -v
+
+# Detener el entorno de desarrollo
+docker compose -f docker-compose.dev.yml down
+
+# Ver imágenes construidas
+docker images
+
+# Entrar a un contenedor en ejecución
+docker exec -it <container-name> sh
+```
+
+### 🔄 Workflow de tags / releases
+
+```bash
+# Construir con un tag específico (versión)
+docker build -t react-interview-prep:1.0.0 .
+
+# Levantar con una versión concreta
+docker run -d -p 8080:80 react-interview-prep:1.0.0
+
+# Subir a un registry (Docker Hub / GHCR)
+docker tag react-interview-prep:1.0.0 tu-usuario/react-interview-prep:1.0.0
+docker push tu-usuario/react-interview-prep:1.0.0
+```
+
+> ⚠️ **Nota:** Docker Desktop debe estar encendido para que estos comandos funcionen.
+
+---
+
+## 🌿 Flujo de Trabajo con Git (Git Flow simplificado)
+
+El repositorio usa una rama `main` (estable) y una rama `develop` (integración).
+
+### 🔀 Ramas del proyecto
+
+- `main` — Código estable y listo para producción/deploy.
+- `develop` — Rama de desarrollo donde se integran features nuevas.
+
+### ✅ Primeros pasos (ya configurado)
+
+```bash
+# Ver ramas locales
+git branch
+
+# Cambiar a la rama develop para trabajar
+git checkout develop
+```
+
+### 🔧 Workflow diario
+
+```bash
+# 1. Asegúrate de estar en develop
+git checkout develop
+
+# 2. Crear una rama para tu feature (desde la última develop)
+git pull origin develop
+git checkout -b feature/nombre-tu-feature
+
+# 3. Trabajar, agregar y commitear
+git add .
+git commit -m "feat: descripción del cambio"
+
+# 4. Volver a develop e integrar tu feature
+git checkout develop
+git merge feature/nombre-tu-feature
+
+# 5. Publicar develop en GitHub
+git push origin develop
+```
+
+### 🎯 Merge a producción (release)
+
+Cuando el código de `develop` ya está probado y estable:
+
+```bash
+git checkout main
+git pull origin main
+git merge develop
+git push origin main
+```
+
+> 📌 **Recomendación profesional:** Para un flujo completo, protegé la rama `main` en GitHub (Settings → Branches → Add rule) para que los merge a producción requieran *Pull Request + code review*, y activá branch protection en `develop` si trabajás en equipo.
+
+### 📝 Convención de commits
+
+| Tipo | Ejemplo | Uso |
+|------|---------|-----|
+| `feat` | `feat: agregar modulo de tipos` | Nueva funcionalidad |
+| `fix` | `fix: corregir bug en formulario` | Corrección de bugs |
+| `docs` | `docs: actualizar README` | Cambios de documentación |
+| `refactor` | `refactor: mejorar componente` | Refactorización sin cambiar comportamiento |
+| `chore` | `chore: actualizar dependencias` | Tareas de mantenimiento |
+| `style` | `style: aplicar formato` | Cambios de formato/estilo |
+
+---
+
 ## 🛠️ Tecnologías Utilizadas
 
 ### Core
@@ -198,6 +377,8 @@ Este es un proyecto de **aprendizaje personal**, pero si encontrás errores, mej
 <div align="center">
 
 **Hecho con ❤️ con fines de aprendizaje y reforzamiento de React.**
+
+Desarrollado por [**@peterarayan**](https://pedroaraya.vercel.app/) — 
 
 ⭐ Si te resultó útil este proyecto, ¡dale una estrella! ⭐
 

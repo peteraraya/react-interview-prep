@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import CodeViewer from './qa-ui/CodeViewer';
 import JSXExamples from './01-jsx/Example';
 import JSXChallenge from './01-jsx/Challenge';
 import PropsExamples from './02-props/Example';
@@ -290,6 +291,17 @@ function ContenidoModulo({ moduloId, tipoContenido }) {
   };
   
   const Componente = componentes[moduloId][tipoContenido];
+
+  // La pestaña "Código" muestra el código fuente de la lección
+  if (tipoContenido === 'codigo') {
+    return (
+      <CodeViewer
+        moduloId={moduloId}
+        tipoContenido={tipoContenido}
+      />
+    );
+  }
+
   return <Componente />;
 }
 
@@ -408,6 +420,17 @@ export default function App() {
           }}
         >
           Preguntas de Entrevista
+        </button>
+        <button
+          onClick={() => setTipoContenido('codigo')}
+          style={{
+            ...estilosGlobales.tab,
+            ...(tipoContenido === 'codigo' 
+              ? { ...estilosGlobales.tabActive, backgroundColor: '#1e1e2e' }
+              : estilosGlobales.tabInactive)
+          }}
+        >
+          💻 Código
         </button>
       </div>
       
